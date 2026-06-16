@@ -1,0 +1,44 @@
+# ============================================================
+# Natural Language Interface for E-commerce Infrastructure
+# Mohammed Kunhi UPP | Yenepoya Deemed To Be University
+# BCA (AI, Cloud Computing & DevOps) with IBM & TCS
+# VI Semester — Third Year
+# ============================================================
+
+# ── CORE CLI CHATBOT ─────────────────────────────────────────
+# chatbot.py requires Python 3.10+ only.
+# No external packages needed for the core CLI tier.
+
+# ── EXTENDED WEB VERSION ─────────────────────────────────────
+
+# Web Framework
+flask==2.3.3
+flask-cors==4.0.0
+
+# LangChain — Agent Framework
+langchain==0.2.16
+langchain-core==0.2.38
+langchain-community==0.2.16
+langchain-ollama==0.1.3
+langchain-classic==0.0.1
+
+# Database (SQLite is built into Python stdlib — no install needed)
+# SQLAlchemy is pulled in automatically by langchain-community
+sqlalchemy==2.0.32
+
+# HTTP client used internally by Ollama + LangChain
+httpx==0.27.2
+requests==2.32.3
+
+# ── OPTIONAL / DEVELOPMENT TOOLS ─────────────────────────────
+
+# Coloured terminal output (for future CLI enhancement)
+# colorama==0.4.6
+
+# Fuzzy string matching (for future intent matching upgrade)
+# thefuzz==0.22.1
+
+# ── EXTERNAL TOOL (install separately) ───────────────────────
+# Ollama — Local LLM Runtime for Llama 3.2
+# Download and install from: https://ollama.com
+# After installing, run: ollama pull llama3.2
