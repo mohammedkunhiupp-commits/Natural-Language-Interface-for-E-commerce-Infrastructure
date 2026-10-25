@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus // ChatOps Developer Console</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #070a10;
+            --bg-surface: #0d121d;
+            --bg-card: rgba(18, 25, 40, 0.7);
+            --border-glow: rgba(59, 130, 246, 0.25);
+            --border-dim: rgba(255, 255, 255, 0.08);
+            --neon-blue: #3b82f6;
+            --neon-green: #10b981;
+            --text-main: #f8fafc;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-deep);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.08) 0px, transparent 50%);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: rgba(13, 18, 29, 0.85);
+            backdrop-filter: blur(16px);
+            border-right: 1px solid var(--border-dim);
+            padding: 36px 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
+        }
+
+        .brand-section h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0 0 6px 0;
+            letter-spacing: -0.5px;
+        }
+        .brand-section h1 span { color: var(--neon-blue); text-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
+
+        .system-status {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glow);
+            padding: 18px;
+            border-radius: 12px;
+            margin-top: 24px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 12px;
+            color: #94a3b8;
+        }
+        .status-indicator:last-child { margin-bottom: 0; }
+        
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--neon-green);
+            box-shadow: 0 0 10px var(--neon-green);
+        }
+
+        .nav-links-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .nav-link-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-dim);
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link-btn:hover {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--neon-blue);
+            color: #fff;
+        }
+
+        .main-console {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+        }
+
+        .terminal-container {
+            width: 100%;
+            max-width: 980px;
+            height: 88vh;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-dim);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+        }
+
+        .terminal-header {
+            background: rgba(8, 11, 17, 0.7);
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-dim);
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mac-dots { display: flex; gap: 8px; }
+        .mac-dots div { width: 12px; height: 12px; border-radius: 50%; }
+        .dot-r { background: #ef4444; } .dot-y { background: #f59e0b; } .dot-g { background: #10b981; }
+
+        .output-feed {
+            flex-grow: 1;
+            padding: 28px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .log-entry {
+            display: flex;
+            flex-direction: column;
+            max-width: 78%;
+            animation: slideUp 0.2s ease-out forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .log-entry .meta {
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .log-entry .payload {
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 13.5px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .client-entry { align-self: flex-end; }
+        .client-entry .payload { 
+            background: linear-gradient(135deg, #2563eb, #3b82f6); 
+            color: #fff; 
+        }
+        .client-entry .meta { text-align: right; }
+
+        .engine-entry { align-self: flex-start; }
+        .engine-entry .payload { 
+            background: rgba(30, 41, 59, 0.35); 
+            border: 1px solid var(--border-dim); 
+            color: #e2e8f0; 
+        }
+
+        .terminal-input-bar {
+            padding: 20px 24px;
+            background: rgba(8, 11, 17, 0.8);
+            border-top: 1px solid var(--border-dim);
+            display: flex;
+            gap: 14px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper span {
+            position: absolute;
+            left: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--neon-blue);
+            font-weight: bold;
+        }
+
+        .terminal-input-bar input {
+            width: 100%;
+            background: #080b11;
+            border: 1px solid var(--border-dim);
+            padding: 15px 16px 15px 42px;
+            border-radius: 10px;
+            color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13.5px;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease;
+        }
+
+        .terminal-input-bar input:focus { border-color: var(--neon-blue); }
+
+        .terminal-input-bar button {
+            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+            color: white;
+            border: none;
+            padding: 0 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 13.5px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .terminal-input-bar button:hover { transform: translateY(-1px); }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="brand-section">
+            <div class="mac-dots" style="margin-bottom: 24px;">
+                <div class="dot-r"></div><div class="dot-y"></div><div class="dot-g"></div>
+            </div>
+            <h1>Nexus<span>.Ops</span></h1>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 0;">Automated Command Gateway</p>
+            
+            <div class="system-status">
+                <div class="status-indicator">
+                    <div class="dot" id="srvDot"></div> Node Cluster: ONLINE
+                </div>
+                <div class="status-indicator">
+                    <div class="dot" id="dbDot"></div> SQLite Stack: MOUNTED
+                </div>
+            </div>
+
+            <div class="nav-links-sidebar">
+                <a href="index.html" class="nav-link-btn">🛍️ Launch Main Store</a>
+                <a href="flipkart.html" class="nav-link-btn">⚡ Electronics Vault</a>
+                <a href="fashion.html" class="nav-link-btn">🧵 Apparel Vault</a>
+                <a href="perfumes.html" class="nav-link-btn">✨ Haute Parfumerie</a>
+            </div>
+        </div>
+        <div style="font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted);">Secure Console // v2.8</div>
+    </div>
+
+    <div class="main-console">
+        <div class="terminal-container">
+            <div class="terminal-header">
+                <div>root@nexus_infrastructure:~</div>
+                <div id="timestamp" style="color: var(--neon-blue);">00:00:00 UTC</div>
+            </div>
+            
+            <div class="output-feed" id="outputFeed">
+                <div class="log-entry engine-entry">
+                    <div class="meta">SYSTEM // STACK_INITIALIZED</div>
+                    <div class="payload">Secure gateway online. Systems ready. Type product name ('macbook', 'hoodie', 'perfume') or 'list'.</div>
+                </div>
+            </div>
+
+            <div class="terminal-input-bar">
+                <div class="input-wrapper">
+                    <span>&gt;_</span>
+                    <input type="text" id="cmdInput" placeholder="Type command (e.g. 'macbook', 'hoodie', 'perfume', or 'list')..." autocomplete="off" onkeydown="if(event.key==='Enter') executeCommand()">
+                </div>
+                <button onclick="executeCommand()">RUN CMD</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Synchronize interface clock
+        setInterval(() => {
+            document.getElementById('timestamp').innerText = new Date().toISOString().slice(11, 19) + " UTC";
+        }, 1000);
+
+        async function executeCommand() {
+            const inputField = document.getElementById('cmdInput');
+            const userText = inputField.value.trim();
+            if (!userText) return;
+
+            // 1. Post request string to log channel view
+            appendLog(userText, 'client-entry', 'USER // REQUEST');
+            inputField.value = '';
+
+            try {
+                // Dispatch execution telemetry to Python backend matrix router
+                const response = await fetch('http://127.0.0.1:5000/api/v1/chatops', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: userText })
+                });
+
+                if (!response.ok) throw new Error("Server rejected framework request.");
+                const data = await response.json();
+
+                appendLog(data.message, 'engine-entry', `GATEWAY // RESP [${data.status.toUpperCase()}]`);
+
+                // Evaluate route transition matrices
+                if (data.metadata && data.metadata.action === "REDIRECT") {
+                    setTimeout(() => {
+                        window.location.href = data.metadata.target;
+                    }, data.metadata.delay_ms);
+                }
+
+            } catch (error) {
+                // Client-side fallback if backend isn't up
+                appendLog(`Backend offline. Running in local fallback mode.\nTry running 'python app.py' in terminal to enable live gateway.`, 'engine-entry', 'GATEWAY // LOCAL_EMULATOR');
+                
+                const q = userText.toLowerCase();
+                if (q.includes('macbook') || q.includes('iphone') || q.includes('sony') || q.includes('headphone')) {
+                    appendLog("Routing to Electronics Cluster...", 'engine-entry', 'REDIRECT // CLUSTER_TECH');
+                    setTimeout(() => window.location.href = `flipkart.html?filter=${q}`, 700);
+                } else if (q.includes('hoodie') || q.includes('sneaker') || q.includes('blazer') || q.includes('jacket')) {
+                    appendLog("Routing to Apparel Cluster...", 'engine-entry', 'REDIRECT // CLUSTER_APPAREL');
+                    setTimeout(() => window.location.href = `fashion.html?filter=${q}`, 700);
+                } else if (q.includes('perfume') || q.includes('oud') || q.includes('fragrance')) {
+                    appendLog("Routing to Haute Parfumerie Vault...", 'engine-entry', 'REDIRECT // CLUSTER_PARFUM');
+                    setTimeout(() => window.location.href = `perfumes.html`, 700);
+                }
+            }
+        }
+
+        function appendLog(text, directionClass, trackingTag) {
+            const feed = document.getElementById('outputFeed');
+            const container = document.createElement('div');
+            container.className = `log-entry ${directionClass}`;
+            container.innerHTML = `<div class="meta">${trackingTag}</div><div class="payload">${text}</div>`;
+            feed.appendChild(container);
+            feed.scrollTop = feed.scrollHeight;
+        }
+    </script>
+</body>
+</html>
